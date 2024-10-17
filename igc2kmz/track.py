@@ -17,7 +17,7 @@
 
 import time
 
-import util
+import igc2kmz.util as util
 
 
 UNKNOWN = 0
@@ -91,14 +91,14 @@ class Track(object):
         else:
             self.elevation_data = False
         self.s = [0.0]
-        for i in xrange(1, n):
+        for i in range(1, n):
             self.s.append(self.s[i - 1] +
                           self.coords[i - 1].distance_to(self.coords[i]))
         self.ele = [(self.coords[i - 1].ele + self.coords[i].ele) / 2.0
-                    for i in xrange(1, n)]
+                    for i in range(1, n)]
         self.total_dz_positive = self.max_dz_positive = 0
         min_ele = self.coords[0].ele
-        for i in xrange(1, n):
+        for i in range(1, n):
             dz = self.coords[i].ele - self.coords[i - 1].ele
             if dz > 0:
                 self.total_dz_positive += dz
@@ -108,7 +108,7 @@ class Track(object):
                 self.max_dz_positive = self.coords[i].ele - min_ele
         self.speed, self.climb, self.tec, self.progress = [], [], [], []
         i0 = i1 = 0
-        for i in xrange(1, n):
+        for i in range(1, n):
             t0 = (self.t[i - 1] + self.t[i]) / 2 - dt / 2
             while self.t[i0] <= t0:
                 i0 += 1
@@ -151,18 +151,18 @@ class Track(object):
         self.bounds.climb = util.Bounds(self.climb)
         self.bounds.tec = util.Bounds(self.tec)
         state = [UNKNOWN] * (n - 1)
-        glide = (self.progress[i] >= 0.9 for i in xrange(0, n - 1))
+        glide = (self.progress[i] >= 0.9 for i in range(0, n - 1))
         for sl in util.condense(util.runs_where(glide), self.t, 60):
             state[sl] = [GLIDE] * (sl.stop - sl.start)
         dive = (self.progress[i] < 0.9 and self.climb[i] < 1.0
-                for i in xrange(0, n - 1))
+                for i in range(0, n - 1))
         for sl in util.condense(util.runs_where(dive), self.t, 30):
             if self.coords[sl.stop].ele - self.coords[sl.start].ele < -100:
                 state[sl] = [DIVE] * (sl.stop - sl.start)
         thermal = ((self.progress[i] < 0.9 and self.climb[i] > 0.0)
                    or (self.speed[i] < 10.0 and self.climb[i] > 0.0)
                    or (self.climb[i] > 1.0)
-                   for i in xrange(0, n - 1))
+                   for i in range(0, n - 1))
         for sl in util.condense(util.runs_where(thermal), self.t, 60):
             state[sl] = [THERMAL] * (sl.stop - sl.start)
         self.thermals, self.glides, self.dives = [], [], []

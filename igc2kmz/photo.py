@@ -17,11 +17,9 @@
 
 import datetime
 import os.path
-import urllib2
-import urlparse
 
-from coord import Coord
-import exif
+from igc2kmz.coord import Coord
+import igc2kmz.exif
 
 
 class Photo(object):
@@ -35,7 +33,7 @@ class Photo(object):
         else:
             file = urllib2.urlopen(self.url) 
             if file.info().typeheader != 'image/jpeg':
-                raise RuntimeError, '%s: not an image/jpeg' % self.url
+                raise RuntimeError('%s: not an image/jpeg' % self.url)
         self.jpeg = exif.JPEG(file)
         if 'DateTimeOriginal' in self.jpeg.exif:
             self.dt = exif.parse_datetime(self.jpeg.exif['DateTimeOriginal'])

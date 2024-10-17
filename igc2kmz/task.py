@@ -19,14 +19,11 @@ from __future__ import with_statement
 
 import datetime
 import re
-try:
-    from xml.etree.cElementTree import ElementTree, TreeBuilder, parse
-except ImportError:
-    from xml.etree.ElementTree import ElementTree, TreeBuilder, parse
+from xml.etree.ElementTree import ElementTree, TreeBuilder, parse
 
-from coord import Coord
-from etree import tag
-from gpx import GPX_DATETIME_FORMAT
+from igc2kmz.coord import Coord
+from igc2kmz.etree import tag
+from igc2kmz.gpx import GPX_DATETIME_FORMAT
 
 
 class Turnpoint(object):

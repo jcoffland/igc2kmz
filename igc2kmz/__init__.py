@@ -17,21 +17,21 @@
 
 import datetime
 from math import pi, sqrt
-from itertools import cycle, izip
+from itertools import cycle
 import operator
 import os
 import re
 import unicodedata
-import urlparse
+from urllib.parse import urlparse
 
-import third_party.pygooglechart as pygooglechart
+import igc2kmz.pygooglechart as pygooglechart
 
-from color import bilinear_gradient, default_gradient
-from coord import rad_to_cardinal
-import kml
-import kmz
-from scale import Scale, TimeScale, ZeroCenteredScale
-import util
+from igc2kmz.color import bilinear_gradient, default_gradient
+from igc2kmz.coord import rad_to_cardinal
+import igc2kmz.kml as kml
+import igc2kmz.kmz as kmz
+from igc2kmz.scale import Scale, TimeScale, ZeroCenteredScale
+import igc2kmz.util as util
 
 
 if 0:
@@ -51,7 +51,7 @@ BASE_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__), '..'))
 def make_table(rows, bgcolors='#dddddd #ffffff'.split()):
     trs = ('<tr bgcolor="%s"><th align="right">%s</th><td>%s</td></tr>'
            % (bgcolor, row[0], row[1])
-           for row, bgcolor in izip(rows, cycle(bgcolors)))
+           for row, bgcolor in zip(rows, cycle(bgcolors)))
     return '<table cellpadding="1" cellspacing="1">%s</table>' % ''.join(trs)
 
 
@@ -147,7 +147,7 @@ class Stock(object):
         self.kmz.add_roots(self.glide_style)
         #
         self.time_mark_styles = []
-        for i in xrange(0, len(self.icons)):
+        for i in range(0, len(self.icons)):
             icon_style = kml.IconStyle(self.icons[i], scale=self.icon_scales[i])
             label_style = kml.LabelStyle(color='cc33ffff',
                                          scale=self.label_scales[i])
@@ -160,7 +160,7 @@ class Stock(object):
         label_style = kml.LabelStyle(scale=self.label_scales[0])
         self.photo_style = kml.Style(balloon_style, icon_style, label_style)
         self.kmz.add_roots(self.photo_style)
-        #
+        
         text = kml.text(kml.CDATA('<h3>$[name]</h3>$[description]'))
         balloon_style = kml.BalloonStyle(text)
         icon_style = kml.IconStyle(self.icons[0], color='ccff33ff',
@@ -171,7 +171,7 @@ class Stock(object):
         self.xc_style = kml.Style(balloon_style, icon_style, label_style,
                                   line_style)
         self.kmz.add_roots(self.xc_style)
-        #
+        
         text = kml.text(kml.CDATA('<h3>$[name]</h3>$[description]'))
         balloon_style = kml.BalloonStyle(text)
         icon_style = kml.IconStyle(self.icons[0], color='ccff33ff',
@@ -182,17 +182,17 @@ class Stock(object):
         self.xc_style2 = kml.Style(balloon_style, icon_style, label_style,
                                    line_style)
         self.kmz.add_roots(self.xc_style2)
-        #
+        
         self.pixel_url = os.path.join('images', 'pixel.png')
-        pixel = open(os.path.join(BASE_DIR, self.pixel_url)).read()
+        pixel = open(os.path.join(BASE_DIR, self.pixel_url), 'rb').read()
         self.kmz.add_files({self.pixel_url: pixel})
-        #
+        
         self.visible_none_folder = self.make_none_folder(1)
         self.invisible_none_folder = self.make_none_folder(0)
-        #
+       
         animation_icon_url = os.path.join('images', 'paraglider.png')
         self.animation_icon = kml.Icon(href=animation_icon_url)
-        animation_icon = open(os.path.join(BASE_DIR, animation_icon_url)).read()
+        animation_icon = open(os.path.join(BASE_DIR, animation_icon_url), 'rb').read()
         files = {animation_icon_url: animation_icon}
         self.kmz.add_files(files)
 
@@ -247,7 +247,7 @@ class Flight(object):
                          '%.1fm/s' % self.track.bounds.climb.min))
         rows.append(('Maximum speed', '%.1fkm/h' % self.track.bounds.speed.max))
         if self.url:
-            components = urlparse.urlparse(self.url)
+            components = urlparse(self.url)
             html = '<a href="%s">%s</a>' % (self.url, components.netloc)
             rows.append(('Flight URL', html))
         table = make_table(rows)
@@ -282,14 +282,14 @@ class Flight(object):
                                               y_range=scale.range)
         chart.fill_solid(pygooglechart.Chart.BACKGROUND, 'ffffff00')
         chart.fill_solid(pygooglechart.Chart.CHART, 'ffffffcc')
-        for i in xrange(0, 32 + 1):
+        for i in range(0, 32 + 1):
             y = i * (scale.range[1] - scale.range[0]) / 32 + scale.range[0]
             chart.add_data([y, y])
             chart.set_line_style(i, 0)
-        for i in xrange(0, 32):
+        for i in range(0, 32):
             r, g, b, a = scale.color((i * (scale.range[1] - scale.range[0])
                                       + 0.5) / 32 + scale.range[0])
-            color = '%02x%02x%02x' % (255 * r, 255 * g, 255 * b)
+            color = '%02x%02x%02x' % (int(255 * r), int(255 * g), int(255 * b))
             chart.add_fill_range(color, i, i + 1)
         axis_index = chart.set_axis_range(pygooglechart.Axis.RIGHT,
                                           scale.range[0], scale.range[1])
@@ -303,7 +303,7 @@ class Flight(object):
                             styleUrl=style_url, **folder_options)
         styles = [kml.Style(kml.LineStyle(color=color, width=self.width))
                   for color in scale.colors()]
-        discrete_values = map(scale.discretize, values)
+        discrete_values = list(map(scale.discretize, values))
         for sl in util.runs(discrete_values):
             coordinates = self.track.coords[sl.start:sl.stop + 1]
             line_string = kml.LineString(coordinates=coordinates,
@@ -397,7 +397,7 @@ class Flight(object):
         timespan = kml.TimeSpan(end=kml.dateTime(self.track.coords[0].dt))
         placemark = kml.Placemark(point, timespan, styleUrl=style.url())
         folder.add(placemark)
-        for i in xrange(1, len(self.track.coords)):
+        for i in range(1, len(self.track.coords)):
             coord = self.track.coords[i - 1].halfway_to(self.track.coords[i])
             point = kml.Point(coordinates=[coord],
                               altitudeMode=self.altitude_mode)
@@ -422,7 +422,7 @@ class Flight(object):
         while dt < self.track.coords[-1].dt:
             coords.append(self.track.coord_at(dt))
             dt += delta
-        for i in xrange(0, len(coords)):
+        for i in range(0, len(coords)):
             j = (i + 1) % len(coords)
             point = kml.Point(coordinates=[coords[i]], altitudeMode=self.altitude_mode)
             heading = coords[i].initial_bearing_to_deg(coords[j])
@@ -534,11 +534,11 @@ class Flight(object):
                     rows.append(make_row(route, 1, 2))
                     rows.append(make_row(route, 2, 1))
                 else:
-                    for i in xrange(1, len(route.tps) - 2):
+                    for i in range(1, len(route.tps) - 2):
                         rows.append(make_row(route, i, i + 1, percentage=True))
                     rows.append(make_row(route, -2, 1, percentage=True))
             else:
-                for i in xrange(0, len(route.tps) - 1):
+                for i in range(0, len(route.tps) - 1):
                     rows.append(make_row(route, i, i + 1))
             rows.append(('Distance', '%.1fkm' % route.distance))
             rows.append(('Multiplier',
@@ -571,14 +571,14 @@ class Flight(object):
                 if len(route.tps) == 4:
                     route_folder.add(make_leg(route, 1, 2))
                 else:
-                    for i in xrange(1, len(route.tps) - 2):
+                    for i in range(1, len(route.tps) - 2):
                         route_folder.add(make_leg(route, i, i + 1, arrow=True))
                     style_url = globals.stock.xc_style2.url()
                     route_folder.add(make_leg(route, -2, 1,
                                               style_url=style_url))
                 route_folder.add(make_leg(route, -2, -1, name=None, arrow=True))
             else:
-                for i in xrange(0, len(route.tps) - 1):
+                for i in range(0, len(route.tps) - 1):
                     route_folder.add(make_leg(route, i, i + 1, arrow=True))
             folder.add(route_folder)
         return kmz.kmz(folder)
@@ -596,7 +596,7 @@ class Flight(object):
             point = kml.Point(coordinates=[coord], altitudeMode='absolute')
             total_dz_positive = total_dz_negative = 0
             peak_climb = util.Bounds(0.0)
-            for i in xrange(sl.start, sl.stop):
+            for i in range(sl.start, sl.stop):
                 dz = self.track.coords[i + 1].ele - self.track.coords[i].ele
                 dt = self.track.t[i + 1] - self.track.t[i]
                 if dz > 0:
@@ -841,7 +841,7 @@ def flights2kmz(flights, roots=[], tz_offset=0, task=None):
     globals.scales.altitude = Scale(globals.bounds.ele.tuple(),
                                     title='altitude', gradient=default_gradient)
     globals.altitude_styles = []
-    for i in xrange(0, 3):
+    for i in range(0, 3):
         altitude_styles = []
         for c in globals.scales.altitude.colors():
             balloon_style = kml.BalloonStyle(text='$[description]')

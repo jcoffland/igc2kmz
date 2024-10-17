@@ -21,8 +21,6 @@ import optparse
 import os
 import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-
 from igc2kmz import Flight, flights2kmz
 from igc2kmz.gpx import GPX
 from igc2kmz.igc import IGC
@@ -48,7 +46,7 @@ def add_flight(option, opt, value, parser):
     elif ext.lower() == '.gpx':
         track = GPX(open(value)).track()
     else:
-        raise RuntimeError, 'unsupported file type %s' % repr(ext)
+        raise RuntimeError('unsupported file type %s' % repr(ext))
     parser.values.flights.append(Flight(track))
 
 
@@ -92,6 +90,7 @@ def main(argv):
             help='add root element')
     parser.add_option('-t', '--task', metavar='FILENAME',
             help='set task')
+
     group = optparse.OptionGroup(parser, 'Per-flight options')
     group.add_option('-i', '--igc', metavar='FILENAME', type='string',
             action='callback', callback=add_flight,
@@ -115,6 +114,7 @@ def main(argv):
             action='callback', callback=set_flight_xc,
             help='set flight XC')
     parser.add_option_group(group)
+
     group = optparse.OptionGroup(parser, 'Per-photo options')
     group.add_option('-p', '--photo', metavar='URL', type='string',
             action='callback', callback=add_photo,
@@ -123,23 +123,20 @@ def main(argv):
             action='callback', callback=set_photo_option,
             help='set photo comment')
     parser.add_option_group(group)
-    #
+
     parser.set_defaults(flights=[])
     parser.set_defaults(roots=[])
     parser.set_defaults(tz_offset=0)
-    #
+
     options, args = parser.parse_args(argv)
     if len(options.flights) == 0:
         parser.error('no flights specified')
     if len(args) != 1:
         parser.error('extra arguments on command line: %s' % repr(args[1:]))
-    #
-    roots = [Verbatim(open(root).read()) for root in options.roots]
-    task = Task.from_file(open(options.task)) if options.task else None
-    kmz = flights2kmz(options.flights,
-                      roots=roots,
-                      tz_offset=options.tz_offset,
-                      task=task)
+
+    roots  = [Verbatim(open(root).read()) for root in options.roots]
+    task   = Task.from_file(open(options.task)) if options.task else None
+    kmz    = flights2kmz(options.flights, roots=roots, tz_offset=options.tz_offset, task=task)
     output = options.output or default_output
     kmz.write(output, '2.2')
 

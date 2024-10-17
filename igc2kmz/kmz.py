@@ -17,12 +17,12 @@
 
 import datetime
 try:
-    from cStringIO import StringIO
+    from io import StringIO
 except ImportError:
     from StringIO import StringIO
 import zipfile
 
-import kml
+import igc2kmz.kml as kml
 
 
 class kmz(object):
@@ -73,13 +73,13 @@ class kmz(object):
         zi = zipfile.ZipInfo('doc.kml')
         zi.compress_type = zipfile.ZIP_DEFLATED
         zi.date_time = date_time
-        zi.external_attr = 0644 << 16
+        zi.external_attr = 0o644 << 16
         zf.writestr(zi, string_io.getvalue())
         string_io.close()
         for key, value in self.files.items():
             zi = zipfile.ZipInfo(key)
             zi.compress_type = zipfile.ZIP_DEFLATED
             zi.date_time = date_time
-            zi.external_attr = 0644 << 16
+            zi.external_attr = 0o644 << 16
             zf.writestr(zi, value)
         zf.close()

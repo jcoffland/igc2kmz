@@ -18,14 +18,11 @@
 from datetime import datetime
 import math
 import re
-try:
-    from xml.etree.cElementTree import parse
-except ImportError:
-    from xml.etree.ElementTree import parse
+from xml.etree.ElementTree import parse
 
-from coord import Coord
-from track import Track
-from waypoint import Waypoint
+from igc2kmz.coord import Coord
+from igc2kmz.track import Track
+from igc2kmz.waypoint import Waypoint
 
 
 GPX_DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
